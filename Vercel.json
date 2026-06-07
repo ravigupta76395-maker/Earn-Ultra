@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "env": {
+    "MONGODB_URI": "@mongodb_uri",
+    "BOT_TOKEN": "@bot_token",
+    "ADMIN_SECRET": "@admin_secret",
+    "NEXT_PUBLIC_APP_URL": "@next_public_app_url"
+  }
+}
