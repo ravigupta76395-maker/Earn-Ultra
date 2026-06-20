@@ -11,13 +11,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ─── MongoDB Connection ───────────────────────────────────────────────────────
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://rg15756448_db_user:UD56WE02WvpJ5215@cluster0.nss1pnd.mongodb.net/referapp?retryWrites=true&w=majority&appName=Cluster0';
+const MONGO_URI = 'mongodb+srv://rg15756448_db_user:UD56WE02WvpJ5215@cluster0.nss1pnd.mongodb.net/referapp?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(MONGO_URI).then(() => console.log('✅ MongoDB Connected')).catch(err => console.error('MongoDB Error:', err));
 
 // ─── Telegram Bot ─────────────────────────────────────────────────────────────
 const BOT_TOKEN = process.env.BOT_TOKEN || '8916897357:AAHI3OMlBCMVrB5cXN4rn3o1AXSI8j0ArQY';
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
-const WEB_APP_URL = process.env.WEB_APP_URL || 'https://earn-ultra.vercel.app';
+const WEB_APP_URL = process.env.WEB_APP_URL || 'https://earn-ultra7.vercel.app';
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 const userSchema = new mongoose.Schema({
