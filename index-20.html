@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Earn Ultra Mini</title>
+<style>
+  :root {
+    --gold: #F4C430;
+    --gold2: #FFD700;
+    --dark: #0A0A0F;
+    --card: #13131A;
+    --card2: #1A1A25;
+    --accent: #7C3AED;
+    --accent2: #9F67FF;
+    --green: #22C55E;
+    --red: #EF4444;
+    --text: #F1F1F1;
+    --muted: #888;
+    --border: rgba(255,255,255,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:var(--dark); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; overflow-x:hidden; }
+
+  /* ── Splash ── */
+  #splash { position:fixed; inset:0; background:var(--dark); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; transition:opacity .5s; }
+  #splash .logo-big { font-size:3rem; font-weight:900; background:linear-gradient(135deg,var(--gold),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-1px; }
+  #splash .sub { color:var(--muted); margin-top:8px; font-size:.9rem; letter-spacing:2px; text-transform:uppercase; }
+  #splash .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin 1s linear infinite; margin-top:32px; }
+
+  /* ── Channel Join Screen ── */
+  #channelScreen { display:none; min-height:100vh; padding:24px 16px; }
+  .channel-hero { text-align:center; padding:40px 0 24px; }
+  .channel-hero .icon { font-size:4rem; }
+  .channel-hero h2 { font-size:1.5rem; font-weight:800; margin:12px 0 8px; }
+  .channel-hero p { color:var(--muted); font-size:.9rem; }
+  .channel-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; display:flex; align-items:center; gap:14px; margin-bottom:12px; text-decoration:none; }
+  .channel-card .ch-icon { width:48px; height:48px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
+  .channel-card .ch-info h4 { font-size:.95rem; font-weight:700; color:var(--text); }
+  .channel-card .ch-info span { font-size:.8rem; color:var(--muted); }
+  .channel-card .ch-arrow { margin-left:auto; color:var(--accent2); font-size:1.2rem; }
+  .btn-check { width:100%; padding:16px; background:linear-gradient(135deg,var(--gold),#E6A800); color:#000; font-weight:800; font-size:1rem; border:none; border-radius:16px; margin-top:16px; cursor:pointer; letter-spacing:.5px; }
+
+  /* ── Verify Screen ── */
+  #verifyScreen { display:none; min-height:100vh; align-items:center; justify-content:center; flex-direction:column; padding:24px; text-align:center; }
+  .verify-icon { font-size:5rem; margin-bottom:20px; }
+  .verify-title { font-size:1.6rem; font-weight:900; margin-bottom:8px; }
+  .verify-sub { color:var(--muted); font-size:.9rem; margin-bottom:32px; line-height:1.6; }
+  .btn-verify { padding:16px 40px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-weight:800; font-size:1rem; border:none; border-radius:16px; cursor:pointer; }
+
+  /* ── Main App ── */
+  #mainApp { display:none; padding-bottom:80px; }
+
+  /* ── Header ── */
+  .app-header { background:linear-gradient(135deg,#0D0D1A,#13131A); padding:16px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+  .header-row { display:flex; align-items:center; justify-content:space-between; }
+  .app-logo { font-size:1.2rem; font-weight:900; background:linear-gradient(135deg,var(--gold),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .header-bal { text-align:right; }
+  .header-bal .label { font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+  .header-bal .amount { font-size:1.4rem; font-weight:900; color:var(--gold); }
+
+  /* ── Tab Content ── */
+  .tab-content { display:none; padding:16px; }
+  .tab-content.active { display:block; }
+
+  /* ── Home Tab ── */
+  .balance-card { background:linear-gradient(135deg,var(--accent) 0%,#4C1D95 100%); border-radius:24px; padding:28px; margin-bottom:16px; position:relative; overflow:hidden; }
+  .balance-card::before { content:''; position:absolute; top:-30px; right:-30px; width:140px; height:140px; background:rgba(255,255,255,0.05); border-radius:50%; }
+  .balance-card::after { content:''; position:absolute; bottom:-40px; left:-20px; width:100px; height:100px; background:rgba(255,255,255,0.04); border-radius:50%; }
+  .bal-label { font-size:.8rem; color:rgba(255,255,255,.6); text-transform:uppercase; letter-spacing:1.5px; }
+  .bal-amount { font-size:3rem; font-weight:900; color:#fff; margin:4px 0; line-height:1; }
+  .bal-amount span { font-size:1.6rem; }
+  .bal-sub { font-size:.8rem; color:rgba(255,255,255,.5); }
+  .bal-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px; position:relative; z-index:1; }
+  .bal-btn { padding:12px; border:none; border-radius:12px; font-weight:700; font-size:.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .bal-btn.withdraw { background:rgba(255,255,255,.15); color:#fff; backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.2); }
+  .bal-btn.share { background:var(--gold); color:#000; }
+
+  .section-title { font-size:1rem; font-weight:800; margin:20px 0 12px; display:flex; align-items:center; gap:8px; }
+  .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  /* Invite card */
+  .invite-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; }
+  .invite-label { font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+  .invite-link-row { display:flex; gap:8px; align-items:center; }
+  .invite-link-input { flex:1; background:var(--card2); border:1px solid var(--border); color:var(--text); padding:12px; border-radius:10px; font-size:.8rem; font-family:monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .copy-btn { padding:12px 16px; background:var(--accent); color:#fff; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:.8rem; white-space:nowrap; }
+
+  .invite-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .invite-stat { background:var(--card2); border-radius:12px; padding:14px; text-align:center; }
+  .invite-stat .val { font-size:1.6rem; font-weight:900; color:var(--gold); }
+  .invite-stat .key { font-size:.75rem; color:var(--muted); margin-top:2px; }
+
+  /* ── Leaderboard ── */
+  .tabs-inner { display:flex; background:var(--card); border-radius:12px; padding:4px; gap:4px; margin-bottom:16px; }
+  .tab-inner-btn { flex:1; padding:10px; text-align:center; font-size:.85rem; font-weight:700; border:none; background:none; color:var(--muted); border-radius:10px; cursor:pointer; transition:.2s; }
+  .tab-inner-btn.active { background:var(--accent); color:#fff; }
+
+  .lb-item { display:flex; align-items:center; gap:12px; background:var(--card); border-radius:14px; padding:14px; margin-bottom:8px; }
+  .lb-rank { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.85rem; flex-shrink:0; }
+  .lb-rank.gold { background:linear-gradient(135deg,#F4C430,#E6A800); color:#000; }
+  .lb-rank.silver { background:linear-gradient(135deg,#C0C0C0,#A0A0A0); color:#000; }
+  .lb-rank.bronze { background:linear-gradient(135deg,#CD7F32,#A0522D); color:#fff; }
+  .lb-rank.normal { background:var(--card2); color:var(--muted); }
+  .lb-info { flex:1; }
+  .lb-info .name { font-weight:700; font-size:.9rem; }
+  .lb-info .uid { font-size:.75rem; color:var(--muted); }
+  .lb-count { font-size:1.1rem; font-weight:900; color:var(--gold); }
+  .lb-count small { font-size:.7rem; color:var(--muted); display:block; text-align:right; }
+
+  .my-refer-card { background:var(--card); border-radius:14px; padding:14px; margin-bottom:8px; display:flex; align-items:center; gap:12px; }
+  .my-refer-icon { width:40px; height:40px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+  .my-refer-info .name { font-weight:700; font-size:.9rem; }
+  .my-refer-info .date { font-size:.75rem; color:var(--muted); }
+  .my-refer-bonus { margin-left:auto; color:var(--green); font-weight:800; font-size:.9rem; }
+
+  /* ── Withdrawal ── */
+  .wd-card { background:var(--card); border-radius:16px; padding:20px; margin-bottom:12px; }
+  .wd-title { font-size:1.1rem; font-weight:800; margin-bottom:16px; }
+  .input-group { margin-bottom:14px; }
+  .input-label { font-size:.8rem; color:var(--muted); margin-bottom:6px; display:block; }
+  .input-field { width:100%; background:var(--card2); border:1px solid var(--border); color:var(--text); padding:14px; border-radius:12px; font-size:.95rem; outline:none; transition:.2s; }
+  .input-field:focus { border-color:var(--accent); }
+  .input-field::placeholder { color:var(--muted); }
+  .wd-info { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+  .wd-info-item { background:var(--card2); border-radius:10px; padding:12px; }
+  .wd-info-item .label { font-size:.72rem; color:var(--muted); }
+  .wd-info-item .val { font-size:1rem; font-weight:800; color:var(--gold); margin-top:2px; }
+  .btn-main { width:100%; padding:16px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; border-radius:14px; font-weight:800; font-size:1rem; cursor:pointer; transition:.2s; }
+  .btn-main:active { transform:scale(.98); }
+  .btn-main:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-gold { background:linear-gradient(135deg,var(--gold),#E6A800); color:#000; }
+
+  /* ── Stats ── */
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stat-card { background:var(--card); border-radius:16px; padding:18px; }
+  .stat-card .icon { font-size:1.6rem; margin-bottom:8px; }
+  .stat-card .val { font-size:1.6rem; font-weight:900; color:var(--gold); }
+  .stat-card .label { font-size:.75rem; color:var(--muted); margin-top:4px; }
+
+  /* ── Bottom Nav ── */
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:rgba(13,13,26,.95); backdrop-filter:blur(16px); border-top:1px solid var(--border); display:grid; grid-template-columns:repeat(4,1fr); padding:8px 0 max(8px,env(safe-area-inset-bottom)); z-index:100; }
+  .nav-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:6px; background:none; border:none; cursor:pointer; color:var(--muted); transition:.2s; }
+  .nav-btn.active { color:var(--gold); }
+  .nav-btn .nav-icon { font-size:1.4rem; }
+  .nav-btn .nav-label { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+
+  /* ── Toast ── */
+  .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-80px); background:#1E1E2E; border:1px solid var(--border); border-radius:12px; padding:12px 20px; font-size:.9rem; font-weight:600; z-index:9999; transition:.3s; white-space:nowrap; max-width:90vw; text-align:center; }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+  .toast.success { border-color:var(--green); color:var(--green); }
+  .toast.error { border-color:var(--red); color:var(--red); }
+
+  /* ── Modal ── */
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:500; display:none; align-items:flex-end; }
+  .modal.show { display:flex; }
+  .modal-body { background:var(--card); border-radius:24px 24px 0 0; padding:24px; width:100%; max-height:80vh; overflow-y:auto; }
+  .modal-handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
+  .modal-title { font-size:1.1rem; font-weight:800; margin-bottom:16px; }
+  .modal-close { float:right; background:none; border:none; color:var(--muted); font-size:1.2rem; cursor:pointer; }
+
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  .fade-up { animation:fadeUp .4s ease; }
+
+  .empty-state { text-align:center; padding:40px 20px; color:var(--muted); }
+  .empty-state .icon { font-size:3rem; margin-bottom:12px; }
+
+  .badge { display:inline-block; padding:3px 8px; border-radius:6px; font-size:.7rem; font-weight:700; }
+  .badge.success { background:rgba(34,197,94,.15); color:var(--green); }
+  .badge.failed { background:rgba(239,68,68,.15); color:var(--red); }
+  .badge.pending { background:rgba(245,158,11,.15); color:#F59E0B; }
+
+  .phone-banner { background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(159,103,255,.1)); border:1px solid rgba(124,58,237,.3); border-radius:14px; padding:14px 16px; margin-bottom:12px; display:flex; align-items:center; gap:12px; cursor:pointer; }
+  .phone-banner .icon { font-size:1.4rem; }
+  .phone-banner .info h4 { font-size:.9rem; font-weight:700; }
+  .phone-banner .info p { font-size:.8rem; color:var(--muted); }
+  .phone-banner .arrow { margin-left:auto; color:var(--accent2); }
+</style>
+</head>
+<body>
+
+<!-- Splash -->
+<div id="splash">
+  <div class="logo-big">⚡ EARN ULTRA</div>
+  <div class="sub">Mini Rewards App</div>
+  <div class="spinner"></div>
+</div>
+
+<!-- Channel Join Screen -->
+<div id="channelScreen">
+  <div class="channel-hero">
+    <div class="icon">📢</div>
+    <h2>Join Our Channels</h2>
+    <p>Join all channels below to unlock the app</p>
+  </div>
+  <div id="channelList"></div>
+  <button class="btn-check" onclick="checkChannels()">✅ I've Joined All Channels</button>
+</div>
+
+<!-- Verify Screen -->
+<div id="verifyScreen" style="display:flex;">
+  <div class="verify-icon">🔐</div>
+  <div class="verify-title">Verify Your Device</div>
+  <div class="verify-sub">One device = One account<br>This ensures fair play for everyone</div>
+  <button class="btn-verify" onclick="verifyDevice()">🔓 Verify This Device</button>
+</div>
+
+<!-- Main App -->
+<div id="mainApp">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-row">
+      <div class="app-logo">⚡ EARN ULTRA</div>
+      <div class="header-bal">
+        <div class="label">Balance</div>
+        <div class="amount" id="headerBal">₹0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Home Tab -->
+  <div class="tab-content active" id="tab-home">
+    <div class="balance-card fade-up">
+      <div class="bal-label">Total Balance</div>
+      <div class="bal-amount" id="mainBal"><span>₹</span>0.00</div>
+      <div class="bal-sub" id="refCountBal">0 referrals made</div>
+      <div class="bal-actions">
+        <button class="bal-btn withdraw" onclick="switchTab('withdrawal')">💸 Withdraw</button>
+        <button class="bal-btn share" onclick="shareInvite()">🔗 Share Link</button>
+      </div>
+    </div>
+
+    <div id="phoneBanner" class="phone-banner" onclick="openPhoneModal()" style="display:none;">
+      <div class="icon">📱</div>
+      <div class="info">
+        <h4>Set Withdrawal Number</h4>
+        <p>Add your number to enable withdrawals</p>
+      </div>
+      <div class="arrow">›</div>
+    </div>
+
+    <div class="section-title">🔗 Your Invite Link</div>
+    <div class="invite-card">
+      <div class="invite-label">Share & Earn</div>
+      <div class="invite-link-row">
+        <div class="invite-link-input" id="inviteLinkDisplay">Loading...</div>
+        <button class="copy-btn" onclick="copyInviteLink()">📋 Copy</button>
+      </div>
+      <div class="invite-stats">
+        <div class="invite-stat">
+          <div class="val" id="totalRefs">0</div>
+          <div class="key">Total Invites</div>
+        </div>
+        <div class="invite-stat">
+          <div class="val" id="bonusPerRef">₹0</div>
+          <div class="key">Per Invite</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard Tab -->
+  <div class="tab-content" id="tab-leaderboard">
+    <div class="tabs-inner">
+      <button class="tab-inner-btn active" onclick="showInnerTab('global')">🌍 Global</button>
+      <button class="tab-inner-btn" onclick="showInnerTab('myrefer')">👤 My Refers</button>
+    </div>
+
+    <div id="globalLB">
+      <div id="lbList"></div>
+    </div>
+    <div id="myReferTab" style="display:none;">
+      <div id="myReferList"></div>
+    </div>
+  </div>
+
+  <!-- Withdrawal Tab -->
+  <div class="tab-content" id="tab-withdrawal">
+    <div class="wd-card">
+      <div class="wd-title">💸 Withdraw Funds</div>
+      <div class="wd-info">
+        <div class="wd-info-item"><div class="label">Available</div><div class="val" id="wdBalance">₹0</div></div>
+        <div class="wd-info-item"><div class="label">Min Withdrawal</div><div class="val" id="wdMin">₹50</div></div>
+        <div class="wd-info-item"><div class="label">Tax</div><div class="val" id="wdTax">0%</div></div>
+        <div class="wd-info-item"><div class="label">Max</div><div class="val" id="wdMax">₹5000</div></div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Amount (₹)</label>
+        <input class="input-field" type="number" id="wdAmount" placeholder="Enter amount..." min="1">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Phone Number</label>
+        <input class="input-field" type="tel" id="wdPhone" placeholder="Enter mobile number...">
+      </div>
+      <button class="btn-main" onclick="requestWithdrawal()">💸 Withdraw Now</button>
+    </div>
+
+    <div id="wdHistory">
+      <div class="section-title">📋 Recent Withdrawals</div>
+      <div id="wdHistoryList"></div>
+    </div>
+  </div>
+
+  <!-- Stats Tab -->
+  <div class="tab-content" id="tab-stats">
+    <div class="section-title">📊 App Stats</div>
+    <div class="stats-grid" id="statsGrid"></div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav" id="bottomNav" style="display:none;">
+  <button class="nav-btn active" onclick="switchTab('home')" id="nav-home">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">Home</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('leaderboard')" id="nav-leaderboard">
+    <span class="nav-icon">🏆</span>
+    <span class="nav-label">Board</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('withdrawal')" id="nav-withdrawal">
+    <span class="nav-icon">💸</span>
+    <span class="nav-label">Withdraw</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('stats')" id="nav-stats">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Stats</span>
+  </button>
+</nav>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Phone Modal -->
+<div class="modal" id="phoneModal">
+  <div class="modal-body">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📱 Set Withdrawal Number <button class="modal-close" onclick="closeModal('phoneModal')">✕</button></div>
+    <div class="input-group">
+      <label class="input-label">Mobile Number</label>
+      <input class="input-field" type="tel" id="modalPhone" placeholder="Enter your mobile number...">
+    </div>
+    <button class="btn-main" onclick="savePhone()">Save Number</button>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let userData = null;
+let settings = {};
+let inviteBonus = 10;
+let telegramId = null;
+let deviceId = null;
+let channelsPending = [];
+
+// ── Device ID ─────────────────────────────────────────────────────────────────
+function getDeviceId() {
+  let id = localStorage.getItem('eu_device_id');
+  if (!id) {
+    id = 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('eu_device_id', id);
+  }
+  return id;
+}
+
+// ── Get Telegram ID from URL ──────────────────────────────────────────────────
+function getTelegramIdFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('tid');
+}
+function getRefFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('ref');
+}
+
+// ── Try Telegram WebApp ───────────────────────────────────────────────────────
+function getTelegramUser() {
+  if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+    return window.Telegram.WebApp.initDataUnsafe.user;
+  }
+  return null;
+}
+
+// ── Init App ──────────────────────────────────────────────────────────────────
+async function initApp() {
+  deviceId = getDeviceId();
+  const tgUser = getTelegramUser();
+  const urlTid = getTelegramIdFromUrl();
+  const refCode = getRefFromUrl();
+
+  if (tgUser) telegramId = String(tgUser.id);
+  else if (urlTid) telegramId = urlTid;
+  else { showSplashError(); return; }
+
+  const firstName = tgUser?.first_name || 'User';
+  const username = tgUser?.username || '';
+
+  try {
+    const res = await fetch('/api/user/init', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telegramId, username, firstName, referCode: refCode, deviceId })
+    });
+    const data = await res.json();
+
+    if (data.needChannelJoin || (data.channels && data.channels.length > 0 && !data.success)) {
+      showChannelScreen(data.channels || []);
+      return;
+    }
+
+    if (!data.success) { showSplashError(); return; }
+
+    userData = data.user;
+    settings = data.settings || {};
+    inviteBonus = data.settings?.inviteBonus || 10;
+    channelsPending = [];
+
+    if (!userData.verified) {
+      hideSplash();
+      document.getElementById('verifyScreen').style.display = 'flex';
+      return;
+    }
+
+    showMain();
+  } catch (e) { showSplashError(); }
+}
+
+function showSplashError() {
+  document.querySelector('#splash .sub').textContent = 'Open via Telegram Bot';
+  document.querySelector('#splash .spinner').style.display = 'none';
+}
+
+function hideSplash() {
+  const splash = document.getElementById('splash');
+  splash.style.opacity = '0';
+  setTimeout(() => splash.style.display = 'none', 500);
+}
+
+function showChannelScreen(channels) {
+  hideSplash();
+  channelsPending = channels;
+  const list = document.getElementById('channelList');
+  list.innerHTML = channels.map(ch => `
+    <a class="channel-card" href="${ch.inviteLink}" target="_blank">
+      <div class="ch-icon">📢</div>
+      <div class="ch-info"><h4>${ch.channelName}</h4><span>Tap to join</span></div>
+      <span class="ch-arrow">›</span>
+    </a>
+  `).join('');
+  document.getElementById('channelScreen').style.display = 'block';
+}
+
+async function checkChannels() {
+  const btn = document.querySelector('.btn-check');
+  btn.textContent = '⏳ Checking...';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/user/init', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telegramId, deviceId })
+    });
+    const data = await res.json();
+    if (data.needChannelJoin || !data.success) {
+      showToast('❌ Please join all channels first!', 'error');
+      btn.textContent = '✅ I\'ve Joined All Channels';
+      btn.disabled = false;
+      return;
+    }
+    userData = data.user;
+    document.getElementById('channelScreen').style.display = 'none';
+    if (!userData.verified) {
+      document.getElementById('verifyScreen').style.display = 'flex';
+    } else {
+      showMain();
+    }
+  } catch (e) {
+    btn.textContent = '✅ I\'ve Joined All Channels';
+    btn.disabled = false;
+  }
+}
+
+async function verifyDevice() {
+  const btn = document.querySelector('.btn-verify');
+  btn.textContent = '⏳ Verifying...';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/user/verify-device', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telegramId, deviceId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      userData = data.user;
+      document.getElementById('verifyScreen').style.display = 'none';
+      showMain();
+    } else {
+      showToast(data.message || 'Verification failed', 'error');
+      btn.textContent = '🔓 Verify This Device';
+      btn.disabled = false;
+    }
+  } catch (e) {
+    btn.textContent = '🔓 Verify This Device';
+    btn.disabled = false;
+  }
+}
+
+function showMain() {
+  hideSplash();
+  document.getElementById('verifyScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('bottomNav').style.display = 'grid';
+  updateUI();
+  loadLeaderboard();
+  loadStats();
+}
+
+function updateUI() {
+  if (!userData) return;
+  const bal = userData.balance.toFixed(2);
+  document.getElementById('headerBal').textContent = '₹' + bal;
+  document.getElementById('mainBal').innerHTML = `<span>₹</span>${bal}`;
+  document.getElementById('refCountBal').textContent = `${userData.referralCount || 0} referrals made`;
+  document.getElementById('totalRefs').textContent = userData.referralCount || 0;
+  document.getElementById('bonusPerRef').textContent = '₹' + inviteBonus;
+  document.getElementById('wdBalance').textContent = '₹' + bal;
+
+  const link = `https://t.me/EarnUltraMiniiBot?start=ref_${userData.referralCode}`;
+  document.getElementById('inviteLinkDisplay').textContent = link;
+
+  if (userData.phoneNumber) {
+    document.getElementById('wdPhone').value = userData.phoneNumber;
+    document.getElementById('phoneBanner').style.display = 'none';
+  } else {
+    document.getElementById('phoneBanner').style.display = 'flex';
+  }
+
+  // Settings
+  if (settings.minWithdrawal) document.getElementById('wdMin').textContent = '₹' + settings.minWithdrawal;
+  if (settings.maxWithdrawal) document.getElementById('wdMax').textContent = '₹' + settings.maxWithdrawal;
+
+  loadUserSettings();
+}
+
+async function loadUserSettings() {
+  try {
+    const res = await fetch(`/api/user/${telegramId}`);
+    const data = await res.json();
+    if (data.success) {
+      userData = data.user;
+      settings = data.settings;
+      document.getElementById('wdTax').textContent = (data.settings?.withdrawalTax || 0) + '%';
+      updateUI();
+    }
+  } catch (e) {}
+}
+
+// ── Tab Switching ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+  if (tab === 'leaderboard') loadLeaderboard();
+  if (tab === 'stats') loadStats();
+}
+
+function showInnerTab(tab) {
+  document.querySelectorAll('.tab-inner-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (tab === 'global') {
+    document.getElementById('globalLB').style.display = 'block';
+    document.getElementById('myReferTab').style.display = 'none';
+  } else {
+    document.getElementById('globalLB').style.display = 'none';
+    document.getElementById('myReferTab').style.display = 'block';
+    loadMyReferrals();
+  }
+}
+
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+async function loadLeaderboard() {
+  try {
+    const res = await fetch('/api/leaderboard');
+    const data = await res.json();
+    if (!data.success) return;
+    const rankClasses = ['gold', 'silver', 'bronze'];
+    const html = data.leaderboard.length === 0
+      ? '<div class="empty-state"><div class="icon">🏆</div><p>No entries yet</p></div>'
+      : data.leaderboard.map((u, i) => `
+        <div class="lb-item">
+          <div class="lb-rank ${rankClasses[i] || 'normal'}">${i + 1}</div>
+          <div class="lb-info">
+            <div class="name">${u.firstName || u.username || 'User'}</div>
+            <div class="uid">@${u.username || 'N/A'}</div>
+          </div>
+          <div class="lb-count">${u.referralCount}<small>referrals</small></div>
+        </div>`).join('');
+    document.getElementById('lbList').innerHTML = html;
+  } catch (e) {}
+}
+
+async function loadMyReferrals() {
+  if (!telegramId) return;
+  try {
+    const res = await fetch(`/api/my-referrals/${telegramId}`);
+    const data = await res.json();
+    if (!data.success) return;
+    const html = data.referrals.length === 0
+      ? '<div class="empty-state"><div class="icon">👥</div><p>No referrals yet. Share your link!</p></div>'
+      : data.referrals.map(r => `
+        <div class="my-refer-card">
+          <div class="my-refer-icon">👤</div>
+          <div class="my-refer-info">
+            <div class="name">${r.firstName || r.username || 'User'}</div>
+            <div class="date">${new Date(r.joinedAt).toLocaleDateString('en-IN')}</div>
+          </div>
+          <div class="my-refer-bonus">+₹${data.inviteBonus}</div>
+        </div>`).join('');
+    document.getElementById('myReferList').innerHTML = html;
+  } catch (e) {}
+}
+
+// ── Withdrawal ────────────────────────────────────────────────────────────────
+async function requestWithdrawal() {
+  const amount = parseFloat(document.getElementById('wdAmount').value);
+  const phone = document.getElementById('wdPhone').value.trim();
+  if (!amount || amount <= 0) return showToast('Enter a valid amount', 'error');
+  if (!phone) return showToast('Enter your phone number', 'error');
+
+  const btn = document.querySelector('#tab-withdrawal .btn-main');
+  btn.disabled = true; btn.textContent = '⏳ Processing...';
+
+  try {
+    const res = await fetch('/api/withdrawal/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telegramId, amount, phoneNumber: phone })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`✅ Withdrawal ${data.status}! Net: ₹${data.netAmount}`, 'success');
+      document.getElementById('wdAmount').value = '';
+      await loadUserSettings();
+    } else {
+      showToast(data.message || 'Withdrawal failed', 'error');
+    }
+  } catch (e) { showToast('Network error', 'error'); }
+  btn.disabled = false; btn.textContent = '💸 Withdraw Now';
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch('/api/stats');
+    const data = await res.json();
+    if (!data.success) return;
+    const s = data.stats;
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card"><div class="icon">👥</div><div class="val">${s.totalUsers}</div><div class="label">Total Users</div></div>
+      <div class="stat-card"><div class="icon">✅</div><div class="val">${s.verifiedUsers}</div><div class="label">Verified</div></div>
+      <div class="stat-card"><div class="icon">💸</div><div class="val">${s.totalWithdrawals}</div><div class="label">Withdrawals</div></div>
+      <div class="stat-card"><div class="icon">💰</div><div class="val">₹${s.totalPaid.toFixed(0)}</div><div class="label">Total Paid</div></div>
+      <div class="stat-card"><div class="icon">🎁</div><div class="val">₹${s.inviteBonus}</div><div class="label">Invite Bonus</div></div>
+      <div class="stat-card"><div class="icon">📉</div><div class="val">₹${s.minWithdrawal}</div><div class="label">Min Withdrawal</div></div>
+    `;
+  } catch (e) {}
+}
+
+// ── Invite ─────────────────────────────────────────────────────────────────────
+function shareInvite() {
+  if (!userData) return;
+  const link = `https://t.me/EarnUltraMiniiBot?start=ref_${userData.referralCode}`;
+  if (navigator.share) {
+    navigator.share({ title: 'Earn Ultra Mini', text: `💰 Join Earn Ultra Mini & earn ₹${inviteBonus} bonus!\n\n`, url: link });
+  } else {
+    copyText(link);
+    showToast('Link copied!', 'success');
+  }
+}
+
+function copyInviteLink() {
+  if (!userData) return;
+  const link = `https://t.me/EarnUltraMiniiBot?start=ref_${userData.referralCode}`;
+  copyText(link);
+  showToast('📋 Link copied!', 'success');
+}
+
+function copyText(text) {
+  if (navigator.clipboard) navigator.clipboard.writeText(text);
+  else { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); }
+}
+
+// ── Phone Modal ───────────────────────────────────────────────────────────────
+function openPhoneModal() {
+  document.getElementById('phoneModal').classList.add('show');
+  if (userData?.phoneNumber) document.getElementById('modalPhone').value = userData.phoneNumber;
+}
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+async function savePhone() {
+  const phone = document.getElementById('modalPhone').value.trim();
+  if (!phone) return showToast('Enter phone number', 'error');
+  try {
+    const res = await fetch('/api/user/set-phone', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telegramId, phoneNumber: phone })
+    });
+    const data = await res.json();
+    if (data.success) {
+      userData.phoneNumber = phone;
+      document.getElementById('wdPhone').value = phone;
+      document.getElementById('phoneBanner').style.display = 'none';
+      closeModal('phoneModal');
+      showToast('✅ Phone number saved!', 'success');
+    }
+  } catch (e) { showToast('Error saving', 'error'); }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  requestAnimationFrame(() => { t.classList.add('show'); });
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.Telegram?.WebApp) window.Telegram.WebApp.expand();
+  setTimeout(initApp, 800);
+});
+</script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</body>
+</html>

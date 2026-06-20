@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - Earn Ultra Mini</title>
+<style>
+  :root {
+    --dark:#0A0A0F; --card:#13131A; --card2:#1A1A25; --accent:#7C3AED; --accent2:#9F67FF;
+    --gold:#F4C430; --green:#22C55E; --red:#EF4444; --orange:#F59E0B;
+    --text:#F1F1F1; --muted:#888; --border:rgba(255,255,255,.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--dark); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; display:flex; min-height:100vh; }
+
+  /* Sidebar */
+  .sidebar { width:240px; background:var(--card); border-right:1px solid var(--border); padding:24px 0; flex-shrink:0; position:fixed; top:0; left:0; bottom:0; overflow-y:auto; z-index:100; }
+  .sidebar-logo { padding:0 20px 24px; border-bottom:1px solid var(--border); }
+  .sidebar-logo h1 { font-size:1.1rem; font-weight:900; background:linear-gradient(135deg,var(--gold),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .sidebar-logo p { color:var(--muted); font-size:.75rem; margin-top:2px; }
+  .nav-section { padding:16px 12px 8px; color:var(--muted); font-size:.7rem; text-transform:uppercase; letter-spacing:1.5px; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; cursor:pointer; color:var(--muted); font-size:.9rem; font-weight:600; border-radius:0; transition:.2s; border-left:3px solid transparent; margin:2px 0; }
+  .nav-item:hover { color:var(--text); background:rgba(255,255,255,.03); }
+  .nav-item.active { color:var(--gold); border-left-color:var(--gold); background:rgba(244,196,48,.05); }
+  .nav-item .icon { font-size:1.1rem; }
+
+  /* Main */
+  .main { margin-left:240px; flex:1; padding:24px; }
+  .page { display:none; }
+  .page.active { display:block; }
+  .page-title { font-size:1.4rem; font-weight:900; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
+
+  /* Stats Cards */
+  .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:24px; }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; }
+  .stat-card .icon { font-size:1.6rem; margin-bottom:8px; }
+  .stat-card .val { font-size:1.8rem; font-weight:900; color:var(--gold); }
+  .stat-card .label { font-size:.75rem; color:var(--muted); margin-top:3px; }
+
+  /* Cards */
+  .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:16px; }
+  .card-title { font-size:1rem; font-weight:800; margin-bottom:16px; color:var(--text); }
+
+  /* Forms */
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .form-group { margin-bottom:14px; }
+  .form-label { font-size:.8rem; color:var(--muted); margin-bottom:6px; display:block; }
+  .form-input, .form-select, .form-textarea { width:100%; background:var(--card2); border:1px solid var(--border); color:var(--text); padding:12px 14px; border-radius:10px; font-size:.9rem; outline:none; transition:.2s; font-family:inherit; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--accent); }
+  .form-textarea { resize:vertical; min-height:100px; }
+  .form-select option { background:var(--card2); }
+
+  /* Buttons */
+  .btn { padding:10px 20px; border:none; border-radius:10px; font-weight:700; font-size:.85rem; cursor:pointer; transition:.2s; }
+  .btn:active { transform:scale(.98); }
+  .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; }
+  .btn-success { background:linear-gradient(135deg,var(--green),#16A34A); color:#fff; }
+  .btn-danger { background:linear-gradient(135deg,var(--red),#DC2626); color:#fff; }
+  .btn-gold { background:linear-gradient(135deg,var(--gold),#E6A800); color:#000; }
+  .btn-sm { padding:6px 12px; font-size:.78rem; }
+  .btn-full { width:100%; padding:13px; }
+
+  /* Table */
+  .table-wrap { overflow-x:auto; border-radius:12px; border:1px solid var(--border); }
+  table { width:100%; border-collapse:collapse; font-size:.85rem; }
+  th { background:var(--card2); padding:12px 14px; text-align:left; font-weight:700; color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); }
+  td { padding:12px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,.02); }
+
+  .badge { display:inline-block; padding:3px 9px; border-radius:6px; font-size:.72rem; font-weight:700; }
+  .badge-green { background:rgba(34,197,94,.15); color:var(--green); }
+  .badge-red { background:rgba(239,68,68,.15); color:var(--red); }
+  .badge-orange { background:rgba(245,158,11,.15); color:var(--orange); }
+  .badge-purple { background:rgba(124,58,237,.15); color:var(--accent2); }
+
+  /* Pagination */
+  .pagination { display:flex; gap:8px; align-items:center; margin-top:14px; justify-content:flex-end; }
+  .page-btn { padding:6px 12px; background:var(--card2); border:1px solid var(--border); color:var(--text); border-radius:8px; cursor:pointer; font-size:.8rem; }
+  .page-btn.active, .page-btn:hover { background:var(--accent); border-color:var(--accent); }
+
+  /* Toggle */
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
+  .toggle-row:last-child { border-bottom:none; }
+  .toggle-info h4 { font-size:.9rem; font-weight:700; }
+  .toggle-info p { font-size:.78rem; color:var(--muted); margin-top:2px; }
+  .toggle { position:relative; width:48px; height:26px; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; cursor:pointer; inset:0; background:var(--card2); border-radius:26px; transition:.3s; border:1px solid var(--border); }
+  .toggle-slider:before { content:''; position:absolute; height:18px; width:18px; left:3px; bottom:3px; background:var(--muted); border-radius:50%; transition:.3s; }
+  input:checked + .toggle-slider { background:var(--accent); border-color:var(--accent); }
+  input:checked + .toggle-slider:before { transform:translateX(22px); background:#fff; }
+
+  /* Channel list */
+  .channel-item { display:flex; align-items:center; gap:12px; padding:12px; background:var(--card2); border-radius:10px; margin-bottom:8px; }
+  .channel-item .ch-name { flex:1; font-weight:600; font-size:.9rem; }
+  .channel-item .ch-id { font-size:.75rem; color:var(--muted); font-family:monospace; }
+
+  /* User search */
+  .search-bar { display:flex; gap:10px; margin-bottom:14px; }
+  .search-input { flex:1; background:var(--card2); border:1px solid var(--border); color:var(--text); padding:10px 14px; border-radius:10px; font-size:.9rem; outline:none; }
+  .search-input:focus { border-color:var(--accent); }
+
+  /* Toast */
+  .toast { position:fixed; top:20px; right:20px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 20px; z-index:9999; transition:.3s; transform:translateY(-80px); opacity:0; max-width:300px; font-size:.9rem; }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.ok { border-color:var(--green); color:var(--green); }
+  .toast.err { border-color:var(--red); color:var(--red); }
+
+  .logout-btn { margin:16px 12px 0; width:calc(100% - 24px); padding:10px; background:rgba(239,68,68,.1); color:var(--red); border:1px solid rgba(239,68,68,.2); border-radius:10px; cursor:pointer; font-weight:700; font-size:.85rem; }
+
+  @media(max-width:768px) {
+    .sidebar { width:60px; }
+    .nav-item span, .sidebar-logo p, .sidebar-logo h1, .nav-section { display:none; }
+    .sidebar-logo { padding:12px; }
+    .nav-item { padding:12px; justify-content:center; }
+    .main { margin-left:60px; }
+    .form-row { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h1>⚡ Earn Ultra</h1>
+    <p>Admin Panel</p>
+  </div>
+  <div class="nav-section">Overview</div>
+  <div class="nav-item active" onclick="showPage('dashboard')"><span class="icon">📊</span><span>Dashboard</span></div>
+  <div class="nav-section">Management</div>
+  <div class="nav-item" onclick="showPage('users')"><span class="icon">👥</span><span>Users</span></div>
+  <div class="nav-item" onclick="showPage('withdrawals')"><span class="icon">💸</span><span>Withdrawals</span></div>
+  <div class="nav-item" onclick="showPage('channels')"><span class="icon">📢</span><span>Channels</span></div>
+  <div class="nav-section">Config</div>
+  <div class="nav-item" onclick="showPage('settings')"><span class="icon">⚙️</span><span>Settings</span></div>
+  <div class="nav-item" onclick="showPage('manage-wd')"><span class="icon">🏦</span><span>Manage WD</span></div>
+  <div class="nav-item" onclick="showPage('broadcast')"><span class="icon">📣</span><span>Broadcast</span></div>
+  <button class="logout-btn" onclick="logout()">🚪 <span>Logout</span></button>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+
+  <!-- Dashboard -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-title">📊 Dashboard</div>
+    <div class="stats-row" id="dashStats"></div>
+    <div class="card">
+      <div class="card-title">⚡ Quick Actions</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+        <button class="btn btn-primary" onclick="showPage('users')">👥 Manage Users</button>
+        <button class="btn btn-gold" onclick="showPage('withdrawals')">💸 Withdrawals</button>
+        <button class="btn btn-success" onclick="showPage('channels')">📢 Channels</button>
+        <button class="btn btn-primary" onclick="showPage('broadcast')">📣 Broadcast</button>
+        <button class="btn btn-danger" onclick="showPage('settings')">⚙️ Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <div class="page" id="page-users">
+    <div class="page-title">👥 User Management</div>
+    <div class="search-bar">
+      <input class="search-input" id="userSearch" placeholder="Search by name, username, ID..." oninput="searchUsers()">
+    </div>
+    <div class="card" style="padding:0;">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>User</th><th>Balance</th><th>Referrals</th><th>Verified</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="usersTable"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="pagination" id="usersPagination"></div>
+
+    <!-- Balance Modal -->
+    <div class="card" id="balancePanel" style="display:none;">
+      <div class="card-title">💰 Modify Balance</div>
+      <input type="hidden" id="balUserId">
+      <div class="form-group"><label class="form-label">Amount (₹)</label><input class="form-input" type="number" id="balAmount" placeholder="Enter amount..."></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-success btn-full" onclick="modifyBalance('add')">➕ Add Balance</button>
+        <button class="btn btn-danger btn-full" onclick="modifyBalance('remove')">➖ Remove Balance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Withdrawals -->
+  <div class="page" id="page-withdrawals">
+    <div class="page-title">💸 Withdrawal History</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="btn btn-sm btn-primary" onclick="loadWithdrawals('')">All</button>
+      <button class="btn btn-sm btn-success" onclick="loadWithdrawals('success')">Success</button>
+      <button class="btn btn-sm btn-danger" onclick="loadWithdrawals('failed')">Failed</button>
+      <button class="btn btn-sm" style="background:var(--orange);color:#000" onclick="loadWithdrawals('pending')">Pending</button>
+    </div>
+    <div class="card" style="padding:0;">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>User</th><th>Amount</th><th>Net</th><th>Number</th><th>Status</th><th>Gateway</th><th>Date</th></tr></thead>
+          <tbody id="wdTable"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="pagination" id="wdPagination"></div>
+  </div>
+
+  <!-- Channels -->
+  <div class="page" id="page-channels">
+    <div class="page-title">📢 Required Channels</div>
+    <div class="card">
+      <div class="card-title">Add New Channel</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Channel ID (e.g. -1001234567890)</label><input class="form-input" id="chId" placeholder="-100..."></div>
+        <div class="form-group"><label class="form-label">Channel Name</label><input class="form-input" id="chName" placeholder="My Channel"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Invite Link</label><input class="form-input" id="chLink" placeholder="https://t.me/..."></div>
+      <p style="font-size:.8rem;color:var(--orange);margin-bottom:12px;">⚠️ Bot must be admin in the channel for join verification to work</p>
+      <button class="btn btn-primary" onclick="addChannel()">➕ Add Channel</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Current Channels</div>
+      <div id="channelList2"><p style="color:var(--muted);font-size:.85rem;">Loading...</p></div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="page" id="page-settings">
+    <div class="page-title">⚙️ App Settings</div>
+    <div class="card">
+      <div class="card-title">💰 Earnings Config</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Invite Bonus (₹)</label><input class="form-input" type="number" id="s-inviteBonus" placeholder="10"></div>
+        <div class="form-group"><label class="form-label">Refer Amount (₹)</label><input class="form-input" type="number" id="s-referAmount" placeholder="10"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🌐 API Payment URL (Withdrawal Gateway)</div>
+      <div class="form-group"><label class="form-label">Payment API URL</label><textarea class="form-textarea" id="s-apiPaymentUrl" placeholder="https://ultra-pay.store/APIs/api?token=...&paytoNumber={number}&amount={amount}"></textarea></div>
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:12px;">Use <code style="color:var(--gold)">{number}</code> and <code style="color:var(--gold)">{amount}</code> as placeholders</p>
+    </div>
+    <div class="card">
+      <div class="card-title">📣 Payout Channel</div>
+      <div class="form-group"><label class="form-label">Channel ID for payout notifications</label><input class="form-input" id="s-payoutChannelId" placeholder="-1001234567890"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔐 Verification Mode</div>
+      <div class="form-group">
+        <label class="form-label">Mode</label>
+        <select class="form-select" id="s-verificationMode">
+          <option value="device">Device Verification (1 device = 1 account)</option>
+          <option value="none">No Verification</option>
+          <option value="captcha">Captcha (manual)</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔒 Admin Password</div>
+      <div class="form-group"><label class="form-label">New Password</label><input class="form-input" type="password" id="s-adminPassword" placeholder="Leave blank to keep current"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔛 System Toggles</div>
+      <div class="toggle-row">
+        <div class="toggle-info"><h4>💸 Withdrawals</h4><p>Enable/disable all withdrawals</p></div>
+        <label class="toggle"><input type="checkbox" id="s-withdrawalEnabled"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info"><h4>🤖 Bot</h4><p>Enable/disable Telegram bot</p></div>
+        <label class="toggle"><input type="checkbox" id="s-botEnabled"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveSettings()">💾 Save All Settings</button>
+  </div>
+
+  <!-- Manage Withdrawal -->
+  <div class="page" id="page-manage-wd">
+    <div class="page-title">🏦 Manage Withdrawals</div>
+    <div class="card">
+      <div class="card-title">💸 Withdrawal Limits</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Min Withdrawal (₹)</label><input class="form-input" type="number" id="m-minWithdrawal" placeholder="50"></div>
+        <div class="form-group"><label class="form-label">Max Withdrawal (₹)</label><input class="form-input" type="number" id="m-maxWithdrawal" placeholder="5000"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🧾 Tax Settings</div>
+      <div class="form-group">
+        <label class="form-label">Withdrawal Tax (%)</label>
+        <input class="form-input" type="number" id="m-withdrawalTax" placeholder="0" min="0" max="100">
+        <p style="font-size:.78rem;color:var(--muted);margin-top:6px;">E.g. 10% tax → user withdraws ₹100, receives ₹90</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">⏰ Cooldown Time</div>
+      <div class="form-group">
+        <label class="form-label">Cooldown (Hours)</label>
+        <input class="form-input" type="number" id="m-cooldownHours" placeholder="24" min="0">
+        <p style="font-size:.78rem;color:var(--muted);margin-top:6px;">Each user must wait this many hours between withdrawals</p>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveWdSettings()">💾 Save Withdrawal Settings</button>
+  </div>
+
+  <!-- Broadcast -->
+  <div class="page" id="page-broadcast">
+    <div class="page-title">📣 Broadcast</div>
+    <div class="card">
+      <div class="card-title">Send Message</div>
+      <div class="form-group">
+        <label class="form-label">Target</label>
+        <select class="form-select" id="bcTarget">
+          <option value="bot">📱 All Users (via Bot)</option>
+          <option value="channel">📢 Specific Channel</option>
+        </select>
+      </div>
+      <div class="form-group" id="bcChannelGroup" style="display:none;">
+        <label class="form-label">Channel ID</label>
+        <input class="form-input" id="bcChannelId" placeholder="-1001234567890">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message (Markdown supported)</label>
+        <textarea class="form-textarea" id="bcMessage" placeholder="*Hello* everyone! 🎉&#10;&#10;This is a broadcast message."></textarea>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="sendBroadcast()">📣 Send Broadcast</button>
+      <div id="bcResult" style="margin-top:12px;display:none;"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event?.target?.closest('.nav-item')?.classList.add('active');
+  if (id === 'dashboard') loadDashStats();
+  if (id === 'users') loadUsers();
+  if (id === 'withdrawals') loadWithdrawals('');
+  if (id === 'channels') loadChannels();
+  if (id === 'settings') loadSettings();
+  if (id === 'manage-wd') loadWdSettings();
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── Logout ───────────────────────────────────────────────────────────────────
+async function logout() {
+  await fetch('/api/admin/logout', { method:'POST' });
+  window.location.href = '/admin/login';
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+async function loadDashStats() {
+  const res = await fetch('/api/admin/stats');
+  const d = await res.json();
+  if (!d.success) return;
+  const s = d.stats;
+  document.getElementById('dashStats').innerHTML = `
+    <div class="stat-card"><div class="icon">👥</div><div class="val">${s.totalUsers}</div><div class="label">Total Users</div></div>
+    <div class="stat-card"><div class="icon">✅</div><div class="val">${s.verifiedUsers}</div><div class="label">Verified Users</div></div>
+    <div class="stat-card"><div class="icon">💸</div><div class="val">${s.totalWithdrawals}</div><div class="label">Total Withdrawals</div></div>
+    <div class="stat-card"><div class="icon">✅</div><div class="val">${s.successW}</div><div class="label">Successful WD</div></div>
+    <div class="stat-card"><div class="icon">⏳</div><div class="val">${s.pendingW}</div><div class="label">Pending WD</div></div>
+    <div class="stat-card"><div class="icon">💰</div><div class="val">₹${s.totalPaid.toFixed(0)}</div><div class="label">Total Paid Out</div></div>
+    <div class="stat-card"><div class="icon">🏦</div><div class="val">₹${s.totalBalance.toFixed(0)}</div><div class="label">User Balances</div></div>
+  `;
+}
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+let userPage = 1;
+let userSearch = '';
+let searchTimer;
+
+function searchUsers() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    userSearch = document.getElementById('userSearch').value;
+    userPage = 1;
+    loadUsers();
+  }, 400);
+}
+
+async function loadUsers() {
+  const res = await fetch(`/api/admin/users?page=${userPage}&search=${userSearch}`);
+  const d = await res.json();
+  if (!d.success) return;
+  document.getElementById('usersTable').innerHTML = d.users.map(u => `
+    <tr>
+      <td>
+        <strong>${u.firstName || 'N/A'}</strong><br>
+        <span style="color:var(--muted);font-size:.75rem;">@${u.username || 'N/A'} • ${u.telegramId}</span>
+      </td>
+      <td><strong style="color:var(--gold)">₹${u.balance.toFixed(2)}</strong></td>
+      <td>${u.referralCount}</td>
+      <td><span class="badge ${u.verified ? 'badge-green' : 'badge-red'}">${u.verified ? '✅ Yes' : '❌ No'}</span></td>
+      <td style="font-size:.78rem;">${new Date(u.joinedAt).toLocaleDateString('en-IN')}</td>
+      <td><button class="btn btn-sm btn-gold" onclick="openBalancePanel('${u.telegramId}')">💰 Balance</button></td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">No users found</td></tr>';
+
+  const total = d.pages;
+  let pg = '';
+  if (userPage > 1) pg += `<button class="page-btn" onclick="changeUserPage(${userPage-1})">‹ Prev</button>`;
+  pg += `<span style="color:var(--muted);font-size:.8rem;">Page ${userPage}/${total}</span>`;
+  if (userPage < total) pg += `<button class="page-btn" onclick="changeUserPage(${userPage+1})">Next ›</button>`;
+  document.getElementById('usersPagination').innerHTML = pg;
+}
+
+function changeUserPage(p) { userPage = p; loadUsers(); }
+
+function openBalancePanel(tid) {
+  document.getElementById('balUserId').value = tid;
+  document.getElementById('balancePanel').style.display = 'block';
+  document.getElementById('balancePanel').scrollIntoView({ behavior:'smooth' });
+}
+
+async function modifyBalance(action) {
+  const tid = document.getElementById('balUserId').value;
+  const amount = document.getElementById('balAmount').value;
+  if (!amount) return toast('Enter amount', 'err');
+  const res = await fetch('/api/admin/balance', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ telegramId: tid, amount, action })
+  });
+  const d = await res.json();
+  if (d.success) { toast(`✅ Done! New balance: ₹${d.newBalance}`); loadUsers(); }
+  else toast(d.message || 'Failed', 'err');
+}
+
+// ─── Withdrawals ──────────────────────────────────────────────────────────────
+let wdPage = 1;
+let wdStatus = '';
+async function loadWithdrawals(status) {
+  wdStatus = status;
+  const res = await fetch(`/api/admin/withdrawals?page=${wdPage}&status=${status}`);
+  const d = await res.json();
+  if (!d.success) return;
+  document.getElementById('wdTable').innerHTML = d.withdrawals.map(w => `
+    <tr>
+      <td><strong>${w.username || 'N/A'}</strong><br><span style="color:var(--muted);font-size:.75rem;">${w.telegramId}</span></td>
+      <td>₹${w.amount}</td>
+      <td style="color:var(--green)">₹${w.netAmount}</td>
+      <td style="font-family:monospace;font-size:.8rem;">${w.phoneNumber}</td>
+      <td><span class="badge ${w.status==='success'?'badge-green':w.status==='failed'?'badge-red':'badge-orange'}">${w.status}</span></td>
+      <td style="font-size:.75rem;color:var(--muted);">${w.gateway || 'N/A'}</td>
+      <td style="font-size:.78rem;">${new Date(w.createdAt).toLocaleString('en-IN')}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px;">No withdrawals found</td></tr>';
+}
+
+// ─── Channels ─────────────────────────────────────────────────────────────────
+async function loadChannels() {
+  const res = await fetch('/api/admin/channels');
+  const d = await res.json();
+  const list = document.getElementById('channelList2');
+  if (!d.channels || d.channels.length === 0) { list.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">No channels added yet</p>'; return; }
+  list.innerHTML = d.channels.map(ch => `
+    <div class="channel-item">
+      <span>📢</span>
+      <div style="flex:1"><div class="ch-name">${ch.channelName}</div><div class="ch-id">${ch.channelId}</div></div>
+      <button class="btn btn-sm btn-danger" onclick="removeChannel('${ch.channelId}')">🗑️</button>
+    </div>
+  `).join('');
+}
+
+async function addChannel() {
+  const channelId = document.getElementById('chId').value.trim();
+  const channelName = document.getElementById('chName').value.trim();
+  const inviteLink = document.getElementById('chLink').value.trim();
+  if (!channelId || !channelName || !inviteLink) return toast('Fill all fields', 'err');
+  const res = await fetch('/api/admin/channels/add', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ channelId, channelName, inviteLink })
+  });
+  const d = await res.json();
+  if (d.success) { toast('✅ Channel added!'); loadChannels(); document.getElementById('chId').value=''; document.getElementById('chName').value=''; document.getElementById('chLink').value=''; }
+  else toast(d.message || 'Failed', 'err');
+}
+
+async function removeChannel(id) {
+  if (!confirm('Remove this channel?')) return;
+  const res = await fetch('/api/admin/channels/remove', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({channelId:id}) });
+  const d = await res.json();
+  if (d.success) { toast('✅ Removed'); loadChannels(); }
+}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+async function loadSettings() {
+  const res = await fetch('/api/admin/settings');
+  const d = await res.json();
+  if (!d.success) return;
+  const s = d.settings;
+  document.getElementById('s-inviteBonus').value = s.inviteBonus || '';
+  document.getElementById('s-referAmount').value = s.referAmount || '';
+  document.getElementById('s-apiPaymentUrl').value = s.apiPaymentUrl || '';
+  document.getElementById('s-payoutChannelId').value = s.payoutChannelId || '';
+  document.getElementById('s-verificationMode').value = s.verificationMode || 'device';
+  document.getElementById('s-withdrawalEnabled').checked = s.withdrawalEnabled !== false;
+  document.getElementById('s-botEnabled').checked = s.botEnabled !== false;
+}
+
+async function saveSettings() {
+  const body = {
+    inviteBonus: parseFloat(document.getElementById('s-inviteBonus').value),
+    referAmount: parseFloat(document.getElementById('s-referAmount').value),
+    apiPaymentUrl: document.getElementById('s-apiPaymentUrl').value,
+    payoutChannelId: document.getElementById('s-payoutChannelId').value,
+    verificationMode: document.getElementById('s-verificationMode').value,
+    withdrawalEnabled: document.getElementById('s-withdrawalEnabled').checked,
+    botEnabled: document.getElementById('s-botEnabled').checked,
+  };
+  const pwd = document.getElementById('s-adminPassword').value;
+  if (pwd) body.adminPassword = pwd;
+  const res = await fetch('/api/admin/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const d = await res.json();
+  if (d.success) toast('✅ Settings saved!');
+  else toast(d.message || 'Failed', 'err');
+}
+
+async function loadWdSettings() {
+  const res = await fetch('/api/admin/settings');
+  const d = await res.json();
+  if (!d.success) return;
+  const s = d.settings;
+  document.getElementById('m-minWithdrawal').value = s.minWithdrawal || '';
+  document.getElementById('m-maxWithdrawal').value = s.maxWithdrawal || '';
+  document.getElementById('m-withdrawalTax').value = s.withdrawalTax || 0;
+  document.getElementById('m-cooldownHours').value = s.cooldownHours || 24;
+}
+
+async function saveWdSettings() {
+  const body = {
+    minWithdrawal: parseFloat(document.getElementById('m-minWithdrawal').value),
+    maxWithdrawal: parseFloat(document.getElementById('m-maxWithdrawal').value),
+    withdrawalTax: parseFloat(document.getElementById('m-withdrawalTax').value),
+    cooldownHours: parseFloat(document.getElementById('m-cooldownHours').value),
+  };
+  const res = await fetch('/api/admin/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const d = await res.json();
+  if (d.success) toast('✅ Withdrawal settings saved!');
+  else toast(d.message || 'Failed', 'err');
+}
+
+// ─── Broadcast ────────────────────────────────────────────────────────────────
+document.getElementById('bcTarget').addEventListener('change', function() {
+  document.getElementById('bcChannelGroup').style.display = this.value === 'channel' ? 'block' : 'none';
+});
+
+async function sendBroadcast() {
+  const message = document.getElementById('bcMessage').value;
+  const target = document.getElementById('bcTarget').value;
+  const channelId = document.getElementById('bcChannelId').value;
+  if (!message) return toast('Enter a message', 'err');
+  const finalTarget = target === 'bot' ? 'bot' : channelId;
+  if (!finalTarget) return toast('Enter channel ID', 'err');
+  const btn = document.querySelector('#page-broadcast .btn-primary');
+  btn.disabled = true; btn.textContent = '⏳ Sending...';
+  const res = await fetch('/api/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message, target: finalTarget}) });
+  const d = await res.json();
+  btn.disabled = false; btn.textContent = '📣 Send Broadcast';
+  if (d.success) {
+    toast(`✅ Sent: ${d.sent}, Failed: ${d.failed}`);
+    const r = document.getElementById('bcResult');
+    r.style.display = 'block';
+    r.innerHTML = `<div style="padding:12px;background:rgba(34,197,94,.1);border-radius:10px;color:var(--green);font-size:.85rem;">✅ Message sent to ${d.sent} recipients. Failed: ${d.failed}</div>`;
+  } else toast(d.message || 'Failed', 'err');
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+loadDashStats();
+</script>
+</body>
+</html>

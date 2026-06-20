@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "index.js"
+    }
+  ],
+  "env": {
+    "MONGO_URI": "@mongo_uri",
+    "BOT_TOKEN": "@bot_token",
+    "WEB_APP_URL": "@web_app_url",
+    "SESSION_SECRET": "@session_secret"
+  }
+}
