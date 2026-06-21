@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://rg15756448_db_user:UD56WE02WvpJ5215@cluster0.nss1pnd.mongodb.net/referapp?retryWrites=true&w=majority&appName=Cluster0';
-const BOT_TOKEN = process.env.BOT_TOKEN || '8863923029:AAGGMNF5CCfjbHcoapJU4Cadsm1zqjJlk1U';
+const BOT_TOKEN = process.env.BOT_TOKEN || '8916897357:AAHI3OMlBCMVrB5cXN4rn3o1AXSI8j0ArQY';
 const WEB_APP_URL = process.env.WEB_APP_URL || 'https://earn-ultra-rk5a.vercel.app';
 const WEBHOOK_PATH = `/webhook/${BOT_TOKEN}`;
 
